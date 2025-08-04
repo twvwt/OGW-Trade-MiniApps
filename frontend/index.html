@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGW Trade - Apple Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        .apple-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .apple-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 150, 255, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #0071e3 0%, #00a1e6 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 113, 227, 0.4);
+        }
+        
+        .nav-link {
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background: #0071e3;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .login-form {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glow {
+            box-shadow: 0 0 15px rgba(0, 150, 255, 0.5);
+        }
+        
+        .toast {
+            animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2s forwards;
+        }
+        
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes toastOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(20px); }
+        }
+        
+        .shop-title {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 800;
+            background: linear-gradient(90deg, #0071e3, #00a1e6, #0071e3);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shine 3s linear infinite;
+        }
+        
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+        
+        /* Стили для слайдеров */
+        .slider-container {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .slider-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .slider-slide {
+            transition: opacity 0.3s ease;
+            scroll-snap-align: start;
+            flex: 0 0 auto;
+        }
+        
+        .slider-slide:not(.active-slide) {
+            opacity: 0.6;
+        }
+        
+        /* Обновленные стили для категорий */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .category-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            aspect-ratio: 1/1;
+        }
+        
+        .category-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 113, 227, 0.3);
+        }
+        
+        .category-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        }
+        
+        .category-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 1.5rem;
+            opacity: 0.2;
+        }
+        
+        /* Стили для товаров и подкатегорий */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .product-card, .subcategory-card {
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover, .subcategory-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .product-image-container, .subcategory-image-container {
+            position: relative;
+            aspect-ratio: 1/1;
+            background-color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        /* Стили для модального окна товара */
+        .product-modal {
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .color-option.selected {
+            border-color: #0071e3;
+            transform: scale(1.1);
+        }
+        
+        .storage-option {
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .storage-option.selected {
+            background: #0071e3;
+            border-color: #0071e3;
+            color: white;
+        }
+        
+        .quick-nav {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .quick-nav-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(0, 113, 227, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .quick-nav-btn:hover {
+            transform: scale(1.1);
+            background: rgba(0, 113, 227, 1);
+        }
+        
+        .quick-nav-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        /* Стили для кнопки избранного в шапке */
+        .wishlist-btn {
+            position: relative;
+        }
+        
+        .wishlist-counter {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #0071e3;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        /* Стили для слайдера фотографий товара */
+        .product-slider {
+            position: relative;
+            height: 250px;
+            overflow: hidden;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+        
+        .product-slides-container {
+            display: flex;
+            height: 100%;
+            transition: transform 0.5s ease;
+        }
+        
+        .product-slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1a1a1a;
+        }
+        
+        .product-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .product-slider-nav {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .product-slider-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .product-slider-dot.active {
+            background-color: #0071e3;
+            transform: scale(1.2);
+        }
+        
+        .product-slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+        
+        .product-slider-btn:hover {
+            background-color: rgba(0, 113, 227, 0.8);
+        }
+        
+        .product-slider-prev {
+            left: 8px;
+        }
+        
+        .product-slider-next {
+            right: 8px;
+        }
+        
+        /* Стили для формы оформления заказа */
+        .order-form {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #9CA3AF;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: rgba(31, 41, 55, 0.5);
+            border: 1px solid rgba(156, 163, 175, 0.3);
+            border-radius: 0.5rem;
+            color: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* Мобильное меню */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-menu.active {
+            transform: translateY(0);
+        }
+        
+        .mobile-menu-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: none;
+        }
+        
+        /* Адаптивные стили */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .desktop-nav {
+                display: none;
+            }
+            
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-section p {
+                font-size: 1rem;
+            }
+            
+            .product-slider {
+                height: 200px;
+            }
+            
+            .quick-nav-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 1rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .product-details-modal {
+                flex-direction: column;
+            }
+            
+            .product-details-modal > div {
+                width: 100% !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .hero-section h1 {
+                font-size: 2rem;
+                margin-bottom: 12px;
+            }
+            
+            .btn-primary {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .quick-nav {
+                bottom: 12px;
+                right: 12px;
+            }
+            
+            .quick-nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Main Content -->
+    <div id="main-content">
+        <!-- Header -->
+        <header class="sticky top-0 z-40 bg-black bg-opacity-80 backdrop-filter backdrop-blur-lg border-b border-gray-800">
+            <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-bold">
+                        <i class="fas fa-apple-alt"></i>
+                    </div>
+                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">OGW Trade</span>
+                </div>
+                
+                <!-- Кнопка мобильного меню -->
+                <button class="mobile-menu-btn text-white md:hidden" @click="toggleMobileMenu">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                
+                <!-- Десктопное меню -->
+                <nav class="desktop-nav hidden md:flex items-center gap-6">
+                    <a href="#" class="nav-link text-white hover:text-blue-400" @click="scrollTo('hero-section')">Главная</a>
+                    <a href="#" class="nav-link text-white hover:text-blue-400" @click="scrollTo('services-section')">Услуги</a>
+                    <a href="#" class="nav-link text-white hover:text-blue-400" @click="scrollTo('products-section')">Магазин</a>
+                    <a href="#" class="nav-link text-white hover:text-blue-400" @click="showServiceInfo('repair')">Ремонт</a>
+                    <a href="#" class="nav-link text-white hover:text-blue-400" @click="scrollTo('contacts-section')">Контакты</a>
+                </nav>
+                
+                <div class="flex items-center gap-4">
+                    <button class="text-white hover:text-blue-400" @click="toggleSearch">
+                        <i class="fas fa-search text-xl"></i>
+                    </button>
+                    <button @click="showWishlist" class="text-white hover:text-blue-400 relative wishlist-btn">
+                        <i class="fas fa-heart text-xl"></i>
+                        <span class="wishlist-counter" v-if="wishlist.length > 0">{{ wishlist.length }}</span>
+                    </button>
+                    <button @click="showBasket" class="text-white hover:text-blue-400 relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        <span id="cart-counter" class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" v-if="basket.length > 0">{{ basket.length }}</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+            <div id="search-bar" class="hidden container mx-auto px-4 py-2">
+                <div class="relative">
+                    <input type="text" id="search-input" class="w-full bg-gray-800 rounded-full px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10" placeholder="Поиск товаров...">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Мобильное меню -->
+        <div class="mobile-menu" :class="{ 'active': mobileMenuOpen }">
+            <button @click="toggleMobileMenu" class="absolute top-6 right-6 text-white text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <nav class="flex flex-col items-center gap-6 text-xl">
+                <a href="#" class="text-white hover:text-blue-400" @click="scrollTo('hero-section'); toggleMobileMenu()">Главная</a>
+                <a href="#" class="text-white hover:text-blue-400" @click="scrollTo('services-section'); toggleMobileMenu()">Услуги</a>
+                <a href="#" class="text-white hover:text-blue-400" @click="scrollTo('products-section'); toggleMobileMenu()">Магазин</a>
+                <a href="#" class="text-white hover:text-blue-400" @click="showServiceInfo('repair'); toggleMobileMenu()">Ремонт</a>
+                <a href="#" class="text-white hover:text-blue-400" @click="scrollTo('contacts-section'); toggleMobileMenu()">Контакты</a>
+            </nav>
+            
+            <div class="mt-8 flex gap-4">
+                <button @click="showWishlist; toggleMobileMenu()" class="text-white hover:text-blue-400 relative">
+                    <i class="fas fa-heart text-xl"></i>
+                    <span class="wishlist-counter" v-if="wishlist.length > 0">{{ wishlist.length }}</span>
+                </button>
+                <button @click="showBasket; toggleMobileMenu()" class="text-white hover:text-blue-400 relative">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center" v-if="basket.length > 0">{{ basket.length }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <section id="hero-section" class="relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-black to-transparent z-10"></div>
+            <img src="https://www.apple.com/v/home/be/images/heroes/iphone-15-pro/hero_iphone15pro__i70z9oz3hj2i_large.jpg" alt="Apple Products" class="w-full h-auto object-cover">
+            
+            <div class="container mx-auto px-4 relative z-20 -mt-32 pb-32">
+                <div class="max-w-2xl">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white">Новейшая техника Apple</h1>
+                    <p class="text-xl text-gray-300 mb-6">Оригинальная продукция и профессиональный ремонт с гарантией</p>
+                    <button @click="scrollTo('services-section')" class="btn-primary px-8 py-3 rounded-full text-lg font-medium flex items-center gap-2">
+                        <i class="fas fa-shopping-bag"></i> В магазин
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services-section" class="py-12 container mx-auto px-4">
+            <h2 class="text-3xl font-bold mb-8 text-center">Наши услуги</h2>
+            
+            <div class="relative">
+                <!-- Кнопки навигации -->
+                <button @click="prevServiceSlide" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center text-white hover:bg-blue-500 transition-all">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <button @click="nextServiceSlide" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center text-white hover:bg-blue-500 transition-all">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                
+                <!-- Контейнер для слайдов -->
+                <div class="slider-container flex overflow-x-auto snap-x snap-mandatory scroll-smooth py-4 gap-4" 
+                     ref="servicesContainer">
+                    <!-- Слайды услуг -->
+                    <div v-for="(service, index) in services" 
+                         :key="index" 
+                         class="slider-slide snap-start flex-shrink-0 w-full md:w-1/3 px-2"
+                         :class="{ 'active-slide': currentServiceIndex === index }">
+                        <div class="apple-card rounded-xl p-6 text-center h-full">
+                            <div class="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-4"
+                                 :class="service.bgColor">
+                                <i :class="service.icon"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">{{ service.title }}</h3>
+                            <p class="text-gray-300 mb-4">{{ service.description }}</p>
+                            <button @click="showServiceInfo(service.key)" class="btn-primary px-6 py-2 rounded-full text-sm font-medium">Подробнее</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Индикаторы слайдов -->
+                <div class="flex justify-center gap-2 mt-4">
+                    <button v-for="(service, index) in services" 
+                            :key="index"
+                            @click="goToServiceSlide(index)"
+                            class="w-3 h-3 rounded-full transition-all"
+                            :class="currentServiceIndex === index ? 'bg-blue-500 w-6' : 'bg-gray-600'">
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products-section" class="py-12 container mx-auto px-4">
+            <!-- Заголовок и навигация -->
+            <div class="flex flex-col items-center mb-12">
+                <h1 class="shop-title text-center mb-6">
+                    OGW Trade Shop
+                </h1>
+                <div v-if="currentSubcategory || currentCategory" class="flex">
+                    <button v-if="currentSubcategory" 
+                            @click="backToSubcategories" 
+                            class="text-blue-400 hover:text-blue-300 text-sm font-normal">
+                        ← Назад к подкатегориям
+                    </button>
+                    <button v-else-if="currentCategory" 
+                            @click="backToCategories" 
+                            class="text-blue-400 hover:text-blue-300 text-sm font-normal">
+                        ← Назад к категориям
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Индикатор загрузки -->
+            <div v-if="loading" class="products-grid">
+                <div v-for="i in 4" :key="i" class="apple-card p-3">
+                    <div class="product-image-container rounded-lg mb-3 animate-pulse"></div>
+                    <div class="h-4 bg-gray-800 rounded mb-2 animate-pulse"></div>
+                    <div class="h-4 bg-gray-800 rounded w-3/4 animate-pulse"></div>
+                </div>
+            </div>
+            
+            <!-- 1. Список категорий (первый уровень) -->
+            <div v-else-if="!currentCategory && !currentSubcategory" class="category-grid">
+                <!-- iPhone - главная категория -->
+                <div class="category-item" @click="selectCategory({name: 'Iphone'})" style="background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <img src="images/category/iPhone.webp" 
+                            alt="iPhone" 
+                            class="h-full w-auto max-w-none object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-xl font-bold text-white">iPhone</h3>
+                        <p class="text-gray-300 text-sm">Смартфоны Apple</p>
+                    </div>
+                    <i class="fas fa-mobile-alt category-icon text-white"></i>
+                </div>
+                
+                <!-- Samsung - главная категория -->
+                <div class="category-item" @click="selectCategory({name: 'Samsung'})" style="background: linear-gradient(135deg, #142850 0%, #27496d 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <img src="images/category/Sumsung.webp" 
+                            alt="Samsung" 
+                            class="h-full w-auto max-w-none object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-xl font-bold text-white">Samsung</h3>
+                        <p class="text-gray-300 text-sm">Смартфоны и гаджеты</p>
+                    </div>
+                    <i class="fas fa-mobile-alt category-icon text-white"></i>
+                </div>
+                
+                <!-- MacBook - главная категория -->
+                <div class="category-item" @click="selectCategory({name: 'MacBook'})" style="background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <img src="images/category/MacBook.webp" 
+                            alt="MacBook" 
+                            class="h-full w-auto max-w-none object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-xl font-bold text-white">MacBook</h3>
+                        <p class="text-gray-300 text-sm">Ноутбуки Apple</p>
+                    </div>
+                    <i class="fas fa-laptop category-icon text-white"></i>
+                </div>
+
+                <!-- iPad - важная категория -->
+                <div class="category-item" @click="selectCategory({name: 'iPad'})" style="background: linear-gradient(135deg, #3a1c71 0%, #d76d77 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <img src="images/category/iPad.webp" 
+                            alt="iPad" 
+                            class="h-full w-auto max-w-none object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-lg font-bold text-white">iPad</h3>
+                        <p class="text-gray-300 text-sm">Планшеты Apple</p>
+                    </div>
+                    <i class="fas fa-tablet-alt category-icon text-white"></i>
+                </div>
+
+                <!-- Xiaomi - важная категория -->
+                <div class="category-item" @click="selectCategory({name: 'Xiaomi'})" style="background: linear-gradient(135deg, #ff4b1f 0%, #ff9068 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <img src="images/category/Xiaomi.webp" 
+                            alt="Xiaomi" 
+                            class="h-full w-auto max-w-none object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-lg font-bold text-white">Xiaomi</h3>
+                        <p class="text-gray-300 text-sm">Смартфоны и гаджеты</p>
+                    </div>
+                    <i class="fas fa-mobile-alt category-icon text-white"></i>
+                </div>
+
+                <!-- iMac - важная категория -->
+                <div class="category-item" @click="selectCategory({name: 'iMac'})" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center p-4">
+                        <img src="images/category/iMac.webp" 
+                            alt="iMac" 
+                            class="h-auto max-h-full w-auto max-w-full object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-lg font-bold text-white">iMac</h3>
+                        <p class="text-gray-300 text-sm">Компьютеры Apple</p>
+                    </div>
+                    <i class="fas fa-desktop category-icon text-white"></i>
+                </div>
+
+                <!-- Apple Watch -->
+                <div class="category-item" @click="selectCategory({name: 'Apple Watch'})" style="background: linear-gradient(135deg, #000000 0%, #434343 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center p-4">
+                        <img src="images/category/AppleWatch.webp" 
+                            alt="Apple Watch" 
+                            class="h-auto max-h-full w-auto max-w-full object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-lg font-bold text-white">Apple Watch</h3>
+                        <p class="text-gray-300 text-sm">Умные часы</p>
+                    </div>
+                    <i class="fas fa-clock category-icon text-white"></i>
+                </div>
+
+                <!-- Marshall -->
+                <div class="category-item" @click="selectCategory({name: 'Marshall'})" style="background: linear-gradient(135deg, #000000 0%, #2d3436 100%);">
+                    <div class="absolute inset-0 bg-black bg-opacity-30 z-10"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <img src="images/category/Marshall.webp" 
+                            alt="Marshall" 
+                            class="h-full w-auto max-w-none object-contain">
+                    </div>
+                    <div class="category-content">
+                        <h3 class="text-lg font-bold text-white">Marshall</h3>
+                        <p class="text-gray-300 text-sm">Аудиотехника</p>
+                    </div>
+                    <i class="fas fa-headphones category-icon text-white"></i>
+                </div>
+            </div>
+            
+            <!-- 2. Список подкатегорий (второй уровень) -->
+            <div v-else-if="currentCategory && !currentSubcategory" class="products-grid">
+                <div v-for="subcategory in filteredSubcategories" :key="subcategory.name" 
+                    class="subcategory-card apple-card p-4 cursor-pointer"
+                    @click="selectSubcategory(subcategory)">
+                    <div class="subcategory-image-container rounded-lg mb-4 overflow-hidden">
+                        <img :src="getSubcategoryImagePath(currentCategory.name, subcategory.name)" 
+                            :alt="subcategory.name" 
+                            class="w-full h-full object-contain p-4"
+                            @error="handleImageError">
+                    </div>
+                    <h3 class="font-medium text-lg mb-1 truncate text-center">
+                        {{ subcategory.name }}
+                    </h3>
+                    <p class="text-gray-400 text-sm text-center">
+                        {{ subcategory.product_count }} товаров
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 3. Список товаров (третий уровень) -->
+            <div v-else class="products-grid">
+                <div v-for="product in filteredProducts" :key="product._id" 
+                    class="product-card apple-card p-4 cursor-pointer"
+                    @click="showProductDetails(product)">
+                    <div class="product-image-container relative rounded-lg mb-4 overflow-hidden">
+                        <img :src="getProductImagePath(product, 1)" 
+                            :alt="product.product_name" 
+                            class="w-full h-full object-cover">
+                        <button v-if="isInWishlist(product._id)" 
+                                @click.stop="removeFromWishlist(product._id)" 
+                                class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <button v-else 
+                                @click.stop="addToWishlist(product)" 
+                                class="absolute top-2 right-2 bg-gray-800 text-white p-2 rounded-full hover:bg-red-500">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+                    <h3 class="font-medium text-lg mb-1 truncate">
+                        {{ product.product_name }}
+                    </h3>
+                    <p class="text-blue-400 font-bold mb-2">{{ formatPrice(product.price) }} ₽</p>
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span>{{ product.color || 'Разные цвета' }}</span>
+                        <span>{{ product.storage || 'Разные объемы' }}</span>
+                    </div>
+                    <button @click.stop="addToCart(product)" 
+                            class="btn-primary w-full py-2 mt-3 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-cart-plus"></i> В корзину
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Сообщение если ничего не найдено -->
+            <div v-if="!loading && showEmptyState" class="text-center py-10">
+                <i class="fas fa-box-open text-4xl text-gray-500 mb-4"></i>
+                <p class="text-gray-400">
+                    {{ getEmptyStateMessage }}
+                </p>
+                <button @click="resetFilters" class="btn-primary px-6 py-2 rounded-lg mt-4">
+                    Показать все
+                </button>
+            </div>
+        </section>
+
+        <!-- News Section -->
+        <section class="py-12 bg-gray-900 bg-opacity-50 overflow-hidden">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold mb-8 text-center">Новости и акции</h2>
+                
+                <div class="relative">
+                    <!-- Кнопки навигации -->
+                    <button @click="prevSlide" class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center text-white hover:bg-blue-500 transition-all">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <button @click="nextSlide" class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center text-white hover:bg-blue-500 transition-all">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Контейнер для слайдов -->
+                    <div class="slider-container flex overflow-x-auto snap-x snap-mandatory scroll-smooth py-4" 
+                         ref="newsContainer"
+                         @scroll="handleScroll">
+                        <!-- Слайды (дублируются для кругового скроллинга) -->
+                        <div v-for="(item, index) in [...news, ...news]" 
+                             :key="index" 
+                             class="slider-slide snap-start flex-shrink-0 w-full md:w-1/2 px-2"
+                             :class="{ 'active-slide': currentSlideIndex === index % news.length }">
+                            <div class="apple-card rounded-xl overflow-hidden h-full">
+                                <div class="relative h-48 overflow-hidden bg-gray-800 flex items-center justify-center">
+                                    <img v-if="item.image" :src="item.image" :alt="item.title" class="w-full h-full object-cover">
+                                    <i v-else class="fas fa-newspaper text-4xl text-gray-500"></i>
+                                </div>
+                                <div class="p-4">
+                                    <h3 class="text-lg font-semibold mb-2">{{ item.title }}</h3>
+                                    <p class="text-gray-400 text-sm mb-3">{{ formatDate(item.date) }}</p>
+                                    <p class="text-gray-300 text-sm">{{ item.description || 'Подробнее в нашем магазине...' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Индикаторы слайдов -->
+                    <div class="flex justify-center gap-2 mt-4">
+                        <button v-for="(item, index) in news" 
+                                :key="index"
+                                @click="goToSlide(index)"
+                                class="w-3 h-3 rounded-full transition-all"
+                                :class="currentSlideIndex === index ? 'bg-blue-500 w-6' : 'bg-gray-600'">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contacts Section -->
+        <section id="contacts-section" class="py-12 bg-gradient-to-br from-gray-900 to-black">
+            <div class="container mx-auto px-4">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h2 class="text-3xl font-bold mb-4">Как нас найти</h2>
+                    <p class="text-gray-300 mb-8">Мы всегда рады помочь вам с выбором техники или ремонтом ваших устройств</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="apple-card rounded-xl p-6 text-left">
+                            <h3 class="text-xl font-semibold mb-2 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-blue-400"></i> Магазин 1
+                            </h3>
+                            <p class="text-gray-300 mb-2">Г.Москва, Багратионовский проезд 7к2, БЦ Рубин</p>
+                            <a href="https://yandex.ru/maps/-/CDc7nA59" target="_blank" class="text-blue-400 hover:underline">Посмотреть на карте</a>
+                        </div>
+                        
+                        <div class="apple-card rounded-xl p-6 text-left">
+                            <h3 class="text-xl font-semibold mb-2 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-blue-400"></i> Магазин 2
+                            </h3>
+                            <p class="text-gray-300 mb-2">Г.Москва, Сущевский вал 5с1, 5 подъезд, 2 этаж</p>
+                            <a href="https://yandex.ru/maps/213/moscow/?indoorLevel=2&ll=37.591660%2C55.794050&mode=poi&poi%5Bpoint%5D=37.591134%2C55.794163&poi%5Buri%5D=ymapsbm1%3A%2F%2Forg%3Foid%3D55157689469&z=18.65" target="_blank" class="text-blue-400 hover:underline">Посмотреть на карте</a>
+                        </div>
+                    </div>
+                    
+                    <div class="apple-card inline-block rounded-xl p-6">
+                        <div class="flex flex-col sm:flex-row items-center gap-6">
+                            <div class="text-left">
+                                <h3 class="text-xl font-semibold mb-2">Контакты</h3>
+                                <p class="text-gray-300 mb-1"><i class="fas fa-clock text-blue-400 mr-2"></i> Ежедневно с 11:00 до 20:00</p>
+                                <p class="text-gray-300 mb-1"><i class="fas fa-phone text-blue-400 mr-2"></i> +7 (910) 447-79-78</p>
+                                <p class="text-gray-300"><i class="fas fa-paper-plane text-blue-400 mr-2"></i> @OGW Trade</p>
+                            </div>
+                            <button @click="showContacts" class="btn-primary px-6 py-3 rounded-full font-medium flex items-center justify-center gap-2 mt-4 sm:mt-0">
+                                <i class="fas fa-comment-dots"></i> Написать нам
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-8 bg-black">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex items-center gap-2 mb-4 md:mb-0">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-bold">
+                            <i class="fas fa-apple-alt"></i>
+                        </div>
+                        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">OGW Trade</span>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <a href="https://t.me/OGW Trade" target="_blank" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-telegram text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-instagram text-2xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <i class="fab fa-vk text-2xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-800 mt-6 pt-6 text-center text-gray-400">
+                    <p>© 2025 OGW Trade. Все права защищены.</p>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Product Details Modal -->
+        <div id="product-details-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50 hidden">
+            <div class="product-modal w-full max-w-2xl rounded-xl p-6 relative max-h-[90vh] overflow-y-auto">
+                <button @click="hideProductDetails" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <div v-if="currentProduct" class="flex flex-col md:flex-row gap-6">
+                    <!-- Изображения товара -->
+                    <div class="w-full md:w-1/2">
+                        <div class="product-slider">
+                            <div class="product-slides-container" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
+                                <!-- Динамически генерируем слайды для всех фото товара -->
+                                <div v-for="i in 3" :key="i" class="product-slide">
+                                    <img :src="getProductImagePath(currentProduct, i)" 
+                                        :alt="currentProduct.product_name" 
+                                        class="w-full h-full object-contain"
+                                        @error="handleImageError">
+                                </div>
+                            </div>
+                            
+                            <!-- Кнопки навигации -->
+                            <button v-if="hasMultiplePhotos" @click="prevPhoto" class="product-slider-btn product-slider-prev">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button v-if="hasMultiplePhotos" @click="nextPhoto" class="product-slider-btn product-slider-next">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            
+                            <!-- Индикаторы слайдов -->
+                            <div v-if="hasMultiplePhotos" class="product-slider-nav">
+                                <div v-for="i in photoCount" 
+                                     :key="i" 
+                                     class="product-slider-dot" 
+                                     :class="{ 'active': currentSlide === i-1 }"
+                                     @click="goToPhoto(i-1)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Информация о товаре -->
+                    <div class="w-full md:w-1/2">
+                        <h2 class="text-2xl font-bold mb-2">{{ currentProduct.product_name }}</h2>
+                        <p class="text-blue-400 text-xl font-bold mb-4">{{ formatPrice(currentProduct.price) }} ₽</p>
+                        
+                        <!-- Варианты товара (цвета и объемы) -->
+                        <div v-if="productVariants.length > 1" class="mb-6">
+                            <h3 class="text-lg font-semibold mb-3">Доступные варианты:</h3>
+                            
+                           <!-- Цвета -->
+                            <div v-if="availableColors.length > 1" class="mb-4">
+                                <p class="text-gray-400 mb-2">Цвет:</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <div v-for="color in availableColors" :key="color" 
+                                        class="color-option" 
+                                        :class="{ 'selected': currentProduct.color === color }"
+                                        :style="{ backgroundColor: getColorHex(color) }"
+                                        @click="switchVariant(color, currentProduct.storage)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Объем памяти -->
+                            <div v-if="availableStorages.length > 1" class="mb-4">
+                                <p class="text-gray-400 mb-2">Объем памяти:</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <div v-for="storage in availableStorages" :key="storage" 
+                                        class="storage-option" 
+                                        :class="{ 'selected': currentProduct.storage === storage }"
+                                        @click="switchVariant(currentProduct.color, storage)">
+                                        {{ storage }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Характеристики -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold mb-2">Характеристики:</h3>
+                            <ul class="text-gray-300 text-sm space-y-1">
+                                <li v-if="currentProduct.color"><span class="text-gray-400">Цвет:</span> {{ currentProduct.color }}</li>
+                                <li v-if="currentProduct.storage"><span class="text-gray-400">Память:</span> {{ currentProduct.storage }}</li>
+                                <li v-if="currentProduct.configuration"><span class="text-gray-400">Конфигурация:</span> {{ currentProduct.configuration }}</li>
+                                <li v-if="currentProduct.country"><span class="text-gray-400">Страна:</span> {{ currentProduct.country }}</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Описание -->
+                        <div class="mb-6" v-if="currentProduct.short_description">
+                            <h3 class="text-lg font-semibold mb-2">Описание:</h3>
+                            <p class="text-gray-300 text-sm">{{ currentProduct.short_description }}</p>
+                        </div>
+                        
+                        <!-- Кнопки действий -->
+                        <div class="flex flex-col gap-3">
+                            <button @click="addToCart(currentProduct)" 
+                                    class="btn-primary w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-cart-plus"></i> Добавить в корзину
+                            </button>
+                            
+                            <button v-if="isInWishlist(currentProduct._id)" 
+                                    @click="removeFromWishlist(currentProduct._id)" 
+                                    class="w-full py-3 rounded-lg border border-red-500 text-red-500 font-medium flex items-center justify-center gap-2">
+                                <i class="fas fa-heart"></i> Удалить из избранного
+                            </button>
+                            <button v-else 
+                                    @click="addToWishlist(currentProduct)" 
+                                    class="w-full py-3 rounded-lg border border-gray-600 text-gray-300 font-medium flex items-center justify-center gap-2 hover:border-red-500 hover:text-red-500">
+                                <i class="far fa-heart"></i> В избранное
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wishlist Modal -->
+        <div id="wishlist-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden">
+            <div class="login-form w-full max-w-md rounded-xl p-6 relative max-h-[80vh] overflow-y-auto">
+                <button @click="hideWishlist" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <h2 class="text-2xl font-bold mb-6 text-center">Избранное</h2>
+                
+                <div id="wishlist-items" class="mb-6">
+                    <div v-if="wishlistProducts.length === 0" class="text-gray-400 text-center py-4">Список избранного пуст</div>
+                    <div v-for="product in wishlistProducts" :key="product._id" class="apple-card rounded-lg p-4 mb-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img :src="product.photo1 ? 'static/' + product.photo1 : '/images/category/placeholder.jpg'" 
+                                 :alt="product.product_name" 
+                                 class="w-12 h-12 object-cover rounded-lg cursor-pointer"
+                                 @click="showProductDetailsFromWishlist(product)">
+                            <div class="cursor-pointer" @click="showProductDetailsFromWishlist(product)">
+                                <h4 class="font-medium">{{ product.product_name }}</h4>
+                                <p class="text-blue-400 font-bold">{{ formatPrice(product.price) }} ₽</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button @click.stop="addToCart(product)" class="text-blue-400 hover:text-blue-300">
+                                <i class="fas fa-cart-plus"></i>
+                            </button>
+                            <button @click.stop="removeFromWishlist(product._id)" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button @click="hideWishlist" class="btn-primary w-full py-3 rounded-lg text-white font-medium">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+
+        <!-- Basket Modal -->
+        <div id="basket-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden">
+            <div class="login-form w-full max-w-md rounded-xl p-6 relative max-h-[80vh] overflow-y-auto">
+                <button @click="hideBasket" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <h2 class="text-2xl font-bold mb-6 text-center">Корзина</h2>
+                
+                <div id="basket-items" class="mb-6">
+                    <div v-if="basket.length === 0" class="text-gray-400 text-center py-4">Корзина пуста</div>
+                    <div v-for="(item, index) in basket" :key="index" class="apple-card rounded-lg p-4 mb-3 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img :src="item.photo1 ? 'static/' + item.photo1 : '/images/category/placeholder.jpg'" 
+                                 :alt="item.product_name" 
+                                 class="w-12 h-12 object-cover rounded-lg cursor-pointer"
+                                 @click="showProductDetailsFromBasket(item)">
+                            <div class="cursor-pointer" @click="showProductDetailsFromBasket(item)">
+                                <h4 class="font-medium">{{ item.product_name }}</h4>
+                                <p class="text-gray-400 text-sm">{{ formatPrice(item.price) }} ₽ × {{ item.quantity || 1 }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold">{{ formatPrice(item.price * (item.quantity || 1)) }} ₽</span>
+                            <button @click.stop="removeFromBasket(index)" class="text-red-400 hover:text-red-300">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="apple-card rounded-xl p-4 mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-300">Товары:</span>
+                        <span id="basket-total-items" class="font-medium">{{ basketTotalItems }}</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-300">Доставка:</span>
+                        <span id="basket-delivery" class="font-medium">{{ basketDeliveryCost === 0 ? 'Бесплатно' : formatPrice(basketDeliveryCost) + ' ₽' }}</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold">
+                        <span>Итого:</span>
+                        <span id="basket-total-price">{{ formatPrice(basketTotalPrice) }} ₽</span>
+                    </div>
+                </div>
+                
+                <button @click="showCheckoutForm" class="btn-primary w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+                    <i class="fas fa-credit-card"></i> Оформить заказ
+                </button>
+            </div>
+        </div>
+
+        <!-- Checkout Form Modal -->
+        <div id="checkout-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden">
+            <div class="login-form w-full max-w-md rounded-xl p-6 relative max-h-[90vh] overflow-y-auto">
+                <button @click="hideCheckoutForm" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <h2 class="text-2xl font-bold mb-6 text-center">Оформление заказа</h2>
+                
+                <div class="order-form">
+                    <div class="form-group">
+                        <label class="form-label">Фамилия</label>
+                        <input type="text" v-model="orderForm.lastName" class="form-input" placeholder="Введите вашу фамилию">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Имя</label>
+                        <input type="text" v-model="orderForm.firstName" class="form-input" placeholder="Введите ваше имя">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Отчество</label>
+                        <input type="text" v-model="orderForm.middleName" class="form-input" placeholder="Введите ваше отчество">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Город</label>
+                        <input type="text" v-model="orderForm.city" class="form-input" placeholder="Введите ваш город">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Улица</label>
+                        <input type="text" v-model="orderForm.street" class="form-input" placeholder="Введите вашу улицу">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Дом</label>
+                        <input type="text" v-model="orderForm.house" class="form-input" placeholder="Введите номер дома">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Квартира</label>
+                        <input type="text" v-model="orderForm.apartment" class="form-input" placeholder="Введите номер квартиры">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Способ доставки</label>
+                        <select v-model="orderForm.deliveryMethod" class="form-input">
+                            <option value="Самовывоз">Самовывоз</option>
+                            <option value="Доставка курьером">Доставка курьером</option>
+                            <option value="Почта России">Почта России</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Способ оплаты</label>
+                        <select v-model="orderForm.paymentMethod" class="form-input">
+                            <option value="Наличные">Наличные</option>
+                            <option value="Карта">Карта</option>
+                            <option value="Apple Pay">Apple Pay</option>
+                            <option value="Криптовалюта">Криптовалюта</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Телефон*</label>
+                        <input type="tel" 
+                            v-model="orderForm.phone" 
+                            class="form-input" 
+                            placeholder="+79101234567"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Комментарий к заказу</label>
+                        <textarea v-model="orderForm.comment" class="form-input" rows="3" placeholder="Ваши пожелания..."></textarea>
+                    </div>
+                    
+                    <div class="apple-card rounded-xl p-4 mb-4">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-300">Товары:</span>
+                            <span class="font-medium">{{ basketTotalItems }}</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-300">Доставка:</span>
+                            <span class="font-medium">{{ basketDeliveryCost === 0 ? 'Бесплатно' : formatPrice(basketDeliveryCost) + ' ₽' }}</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-bold">
+                            <span>Итого:</span>
+                            <span>{{ formatPrice(basketTotalPrice) }} ₽</span>
+                        </div>
+                    </div>
+                    
+                    <button @click="submitOrder" class="btn-primary w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-check"></i> Подтвердить заказ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Info Modal -->
+        <div id="service-info-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden">
+            <div class="login-form w-full max-w-md rounded-xl p-6 relative">
+                <button @click="hideServiceInfo" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <h2 id="service-info-title" class="text-2xl font-bold mb-6 text-center">{{ serviceInfoTitle }}</h2>
+                
+                <div id="service-info-content" class="mb-6" v-html="serviceInfoContent">
+                </div>
+                
+                <button @click="hideServiceInfo" class="btn-primary w-full py-3 rounded-lg text-white font-medium">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+
+        <!-- Contacts Modal -->
+        <div id="contacts-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50 hidden">
+            <div class="login-form w-full max-w-md rounded-xl p-6 relative">
+                <button @click="hideContacts" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                
+                <h2 class="text-2xl font-bold mb-6 text-center">Свяжитесь с нами</h2>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Выберите способ связи</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="https://t.me/OGW Trade" target="_blank" class="bg-gray-800 hover:bg-blue-500 rounded-lg p-3 flex flex-col items-center">
+                            <i class="fab fa-telegram text-2xl mb-2"></i>
+                            <span>Telegram</span>
+                        </a>
+                        <a href="tel:+79104477978" class="bg-gray-800 hover:bg-blue-500 rounded-lg p-3 flex flex-col items-center">
+                            <i class="fas fa-phone text-2xl mb-2"></i>
+                            <span>Позвонить</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="message" class="block text-gray-300 mb-2">Ваше сообщение</label>
+                    <textarea id="message" rows="4" v-model="contactMessage" class="w-full bg-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Опишите ваш вопрос..."></textarea>
+                </div>
+                
+                <button @click="sendMessage" class="btn-primary w-full py-3 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i> Отправить
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Navigation Buttons -->
+        <div class="quick-nav">
+            <button @click="showWishlist" class="quick-nav-btn" title="Избранное">
+                <i class="fas fa-heart"></i>
+                <span v-if="wishlist.length > 0" class="quick-nav-badge">{{ wishlist.length }}</span>
+            </button>
+            <button @click="showBasket" class="quick-nav-btn" title="Корзина">
+                <i class="fas fa-shopping-cart"></i>
+                <span v-if="basket.length > 0" class="quick-nav-badge">{{ basket.length }}</span>
+            </button>
+            <button @click="scrollTo('products-section')" class="quick-nav-btn" title="Магазин">
+                <i class="fas fa-store"></i>
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // API клиент
+        class ApiClient {
+            constructor() {
+                this.baseUrl = 'http://localhost:8000/api';
+            }
+
+            async request(endpoint, options = {}) {
+                const url = `${this.baseUrl}${endpoint}`;
+                try {
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    };
+
+                    const response = await fetch(url, {
+                        method: options.method || 'GET',
+                        headers,
+                        body: options.body ? JSON.stringify(options.body) : undefined
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('API request failed:', error);
+                    throw error;
+                }
+            }
+
+            async getCategories() {
+                return this.request('/products/category');
+            }
+
+            async getSubcategories() {
+                return this.request('/products/subcategory');
+            }
+
+            async getProducts() {
+                return this.request('/products');
+            }
+
+            async getProductsBySubcategory(category, subcategory) {
+                return this.request(`/products?category=${category}&subcategory=${subcategory}`);
+            }
+
+            async getNews() {
+                return this.request('/news');
+            }
+
+            async createOrder(orderData) {
+                try {
+                    const response = await fetch('http://localhost:8000/api/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Telegram-Init-Data': window.Telegram.WebApp.initData || ''
+                        },
+                        body: JSON.stringify(orderData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('Ошибка оформления заказа:', error);
+                    throw error;
+                }
+            }
+        }
+
+        const api = new ApiClient();
+
+        const { createApp } = Vue;
+
+        const app = createApp({
+            data() {
+                return {
+                    loading: true,
+                    currentCategoryFilter: 'all',
+                    currentCategory: null,
+                    currentSubcategory: null,
+                    categories: [],
+                    subcategories: [],
+                    products: [],
+                    filteredCategories: [],
+                    filteredSubcategories: [],
+                    filteredProducts: [],
+                    currentProduct: null,
+                    productVariants: [],
+                    availableColors: [],
+                    availableStorages: [],
+                    currentSlide: 0,
+                    news: [
+                        {
+                            title: "Скидки на iPhone 15",
+                            date: "2025-06-15",
+                            description: "Специальные цены на все модели iPhone 15 до конца месяца",
+                            image: "https://www.apple.com/newsroom/images/product/iphone/standard/Apple-iPhone-15-Pro-lineup-hero-230912.jpg.landing-big_2x.jpg"
+                        },
+                        {
+                            title: "Бесплатный сервис",
+                            date: "2025-06-10",
+                            description: "Бесплатная диагностика и чистка для всех устройств Apple",
+                            image: "https://www.apple.com/v/iphone/home/bo/images/overview/compare/compare_iphone_15__f4h2c9x1x4uq_large.jpg"
+                        },
+                        {
+                            title: "Новые поступления",
+                            date: "2025-06-05",
+                            description: "В продажу поступили новые MacBook Pro с процессором M3",
+                            image: "https://www.apple.com/v/macbook-pro-14-and-16/b/images/overview/hero/hero_intro__f16v9v9sgueq_large.jpg"
+                        },
+                        {
+                            title: "Акция на AirPods",
+                            date: "2025-05-28",
+                            description: "Скидка 20% на AirPods Pro 2 при покупке любого iPhone",
+                            image: "https://www.apple.com/v/airpods/shared/compare/e/images/overview/compare_airpods_pro__b13w6wrnbllu_large.jpg"
+                        }
+                    ],
+                    services: [
+                        {
+                            key: 'repair',
+                            title: 'Ремонт техники',
+                            description: 'Профессиональный ремонт iPhone, MacBook и другой техники Apple',
+                            icon: 'fas fa-tools',
+                            bgColor: 'bg-blue-500'
+                        },
+                        {
+                            key: 'delivery',
+                            title: 'Бесплатная доставка',
+                            description: 'Бесплатная доставка в пределах МКАД при заказе от 10 000 ₽',
+                            icon: 'fas fa-truck',
+                            bgColor: 'bg-purple-500'
+                        },
+                        {
+                            key: 'warranty',
+                            title: 'Гарантия качества',
+                            description: 'Гарантия на все товары и услуги до 2 лет',
+                            icon: 'fas fa-shield-alt',
+                            bgColor: 'bg-green-500'
+                        },
+                        {
+                            key: 'trade-in',
+                            title: 'Trade-in',
+                            description: 'Обменяйте ваше старое устройство на новое с доплатой',
+                            icon: 'fas fa-exchange-alt',
+                            bgColor: 'bg-yellow-500'
+                        },
+                        {
+                            key: 'setup',
+                            title: 'Настройка',
+                            description: 'Профессиональная настройка ваших устройств',
+                            icon: 'fas fa-cog',
+                            bgColor: 'bg-red-500'
+                        },
+                        {
+                            key: 'accessories',
+                            title: 'Аксессуары',
+                            description: 'Оригинальные аксессуары и чехлы для ваших устройств',
+                            icon: 'fas fa-headphones',
+                            bgColor: 'bg-indigo-500'
+                        }
+                    ],
+                    currentServiceIndex: 0,
+                    wishlist: [],
+                    wishlistProducts: [],
+                    basket: [],
+                    currentSlideIndex: 0,
+                    autoSlideInterval: null,
+                    isDragging: false,
+                    startPosX: 0,
+                    currentTranslateX: 0,
+                    contactMessage: '',
+                    serviceInfoTitle: '',
+                    serviceInfoContent: '',
+                    showSearch: false,
+                    mobileMenuOpen: false,
+                    orderForm: {
+                        lastName: '',
+                        firstName: '',
+                        middleName: '',
+                        city: '',
+                        street: '',
+                        house: '',
+                        apartment: '',
+                        deliveryMethod: 'Самовывоз',
+                        paymentMethod: 'Карта',
+                        comment: ''
+                    }
+                }
+            },
+            computed: {
+                showEmptyState() {
+                    return (
+                        (!this.currentCategory && !this.currentSubcategory && this.filteredCategories.length === 0) ||
+                        (this.currentCategory && !this.currentSubcategory && this.filteredSubcategories.length === 0) ||
+                        (this.currentSubcategory && this.filteredProducts.length === 0)
+                    );
+                },
+                getEmptyStateMessage() {
+                    if (this.currentSubcategory) return 'Товары не найдены';
+                    if (this.currentCategory) return 'Подкатегории не найдены';
+                    return 'Категории не найдены';
+                },
+                basketTotalItems() {
+                    return this.basket.reduce((total, item) => total + (item.quantity || 1), 0);
+                },
+                basketTotalPrice() {
+                    return this.basket.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
+                },
+                basketDeliveryCost() {
+                    return this.basketTotalPrice >= 10000 ? 0 : 500;
+                },
+                photoCount() {
+                    return 3; // Всегда 3 фото для каждого товара
+                },
+                hasMultiplePhotos() {
+                    return this.photoCount > 1;
+                }
+            },
+            async mounted() {
+                try {
+                    const [categories, subcategories, products] = await Promise.all([
+                        api.getCategories(),
+                        api.getSubcategories(),
+                        api.getProducts()
+                    ]);
+                    
+                    this.categories = categories.map(cat => ({
+                        ...cat,
+                        subcategory_count: subcategories.filter(sc => sc.category === cat.name).length
+                    }));
+                    this.filteredCategories = this.categories;
+                    
+                    this.subcategories = subcategories.map(sc => ({
+                        ...sc,
+                        product_count: products.filter(p => p.subcategory === sc.name && p.category === sc.category).length
+                    }));
+                    
+                    this.products = products;
+                    this.loadWishlist();
+                    this.loadBasket();
+                    
+                } catch (error) {
+                    console.error('Ошибка загрузки данных:', error);
+                    this.showToast('Ошибка загрузки данных', 'error');
+                } finally {
+                    this.loading = false;
+                    
+                    this.$nextTick(() => {
+                        const container = this.$refs.newsContainer;
+                        if (container) {
+                            container.scrollLeft = container.children[0].offsetWidth * this.news.length;
+                            container.addEventListener('touchstart', this.handleTouchStart);
+                            container.addEventListener('touchmove', this.handleTouchMove);
+                            container.addEventListener('touchend', this.handleTouchEnd);
+                            this.startAutoSlide();
+                        }
+                        
+                        // Инициализация слайдера услуг
+                        const servicesContainer = this.$refs.servicesContainer;
+                        if (servicesContainer) {
+                            servicesContainer.addEventListener('scroll', this.handleServicesScroll);
+                        }
+                    });
+                }
+            },
+            
+            beforeUnmount() {
+                this.stopAutoSlide();
+                const container = this.$refs.newsContainer;
+                if (container) {
+                    container.removeEventListener('touchstart', this.handleTouchStart);
+                    container.removeEventListener('touchmove', this.handleTouchMove);
+                    container.removeEventListener('touchend', this.handleTouchEnd);
+                }
+                
+                const servicesContainer = this.$refs.servicesContainer;
+                if (servicesContainer) {
+                    servicesContainer.removeEventListener('scroll', this.handleServicesScroll);
+                }
+            },
+            methods: {
+                toggleMobileMenu() {
+                    this.mobileMenuOpen = !this.mobileMenuOpen;
+                },
+                
+                // Генерация пути к изображению товара
+                getProductImagePath(product, imageNumber) {
+                    if (!product || !product.category || !product.subcategory || !product.color) {
+                        return 'images/category/placeholder.jpg';
+                    }
+                    
+                    // Форматируем названия для пути к файлу
+                    const formattedCategory = product.category.toLowerCase().replace(/\s+/g, '-');
+                    const formattedSubcategory = product.subcategory.toLowerCase().replace(/\s+/g, '-');
+                    const formattedColor = product.color.toLowerCase().replace(/\s+/g, '-');
+                    
+                    return `images/category/${formattedCategory}/${formattedSubcategory}/${formattedColor}/${imageNumber}.webp`;
+                    },
+                // Получение всех фото товара
+                getProductPhotos(product) {
+                    const photos = [];
+                    for (let i = 1; i <= 3; i++) {
+                        photos.push(this.getProductImagePath(product, i));
+                    }
+                    return photos;
+                },
+                
+                // Обработчик ошибок загрузки изображения
+                handleImageError(event) {
+                    event.target.src = 'images/category/placeholder.jpg';
+                    event.target.classList.add('p-8');
+                },
+                // Новый метод: получение пути к изображению подкатегории
+                getSubcategoryImagePath(categoryName, subcategoryName) {
+                    // Форматируем названия для пути к файлу
+                    const formattedCategory = categoryName.toLowerCase().replace(/\s+/g, '-');
+                    const formattedSubcategory = subcategoryName.toLowerCase().replace(/\s+/g, '-');
+                    
+                    return `images/category/${formattedCategory}/${formattedSubcategory}.webp`;
+                },
+                
+                // Выбор категории (переход на уровень подкатегорий)
+                selectCategory(category) {
+                    this.currentCategory = category;
+                    this.filteredSubcategories = this.subcategories.filter(
+                        sc => sc.category === category.name
+                    );
+                    this.scrollTo('products-section');
+                },
+                
+                // Выбор подкатегории (переход на уровень товаров)
+                async selectSubcategory(subcategory) {
+                    this.currentSubcategory = subcategory;
+                    try {
+                        this.loading = true;
+                        this.filteredProducts = await api.getProductsBySubcategory(
+                            subcategory.category,
+                            subcategory.name
+                        );
+                        
+                        // Добавляем фото подкатегории
+                        this.currentSubcategory.image = `images/category/${subcategory.name.toLowerCase().replace(/\s+/g, '-')}.webp`;
+                    } catch (error) {
+                        console.error('Ошибка загрузки товаров:', error);
+                        this.showToast('Ошибка загрузки товаров', 'error');
+                    } finally {
+                        this.loading = false;
+                        this.scrollTo('products-section');
+                    }
+                },
+                
+                // Навигация назад
+                backToSubcategories() {
+                    this.currentSubcategory = null;
+                    this.scrollTo('products-section');
+                },
+                
+                backToCategories() {
+                    this.currentCategory = null;
+                    this.currentSubcategory = null;
+                    this.scrollTo('products-section');
+                },
+                
+                // Сброс фильтров
+                resetFilters() {
+                    this.currentCategoryFilter = 'all';
+                    this.currentCategory = null;
+                    this.currentSubcategory = null;
+                    this.filteredCategories = this.categories;
+                    this.scrollTo('products-section');
+                },
+                
+                // Форматирование цены
+                formatPrice(price) {
+                    return new Intl.NumberFormat('ru-RU').format(price);
+                },
+                
+                // Форматирование даты
+                formatDate(dateString) {
+                    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                    return new Date(dateString).toLocaleDateString('ru-RU', options);
+                },
+                
+                // Работа с избранным
+                loadWishlist() {
+                    const saved = localStorage.getItem('wishlist');
+                    if (saved) {
+                        this.wishlist = JSON.parse(saved);
+                        // Находим товары в избранном
+                        this.wishlistProducts = this.products.filter(p => this.wishlist.includes(p._id));
+                    }
+                },
+                
+                addToWishlist(product) {
+                    if (!this.wishlist.includes(product._id)) {
+                        this.wishlist.push(product._id);
+                        this.wishlistProducts.push(product);
+                        this.saveWishlist();
+                        this.showToast(`${product.product_name} добавлен в избранное`, 'success');
+                    }
+                },
+                
+                removeFromWishlist(productId) {
+                    this.wishlist = this.wishlist.filter(id => id !== productId);
+                    this.wishlistProducts = this.wishlistProducts.filter(p => p._id !== productId);
+                    this.saveWishlist();
+                    this.showToast('Товар удален из избранного', 'success');
+                },
+                
+                saveWishlist() {
+                    localStorage.setItem('wishlist', JSON.stringify(this.wishlist));
+                },
+                
+                isInWishlist(productId) {
+                    return this.wishlist.includes(productId);
+                },
+                
+                // Работа с корзиной
+                addToCart(product) {
+                    const existingItem = this.basket.find(item => item._id === product._id);
+                    if (existingItem) {
+                        existingItem.quantity = (existingItem.quantity || 1) + 1;
+                    } else {
+                        this.basket.push({
+                            ...product,
+                            quantity: 1
+                        });
+                    }
+                    this.showToast(`${product.product_name} добавлен в корзину`, 'success');
+                    this.saveBasket();
+                },
+                
+                removeFromBasket(index) {
+                    this.basket.splice(index, 1);
+                    this.showToast('Товар удален из корзины', 'success');
+                    this.saveBasket();
+                },
+                
+                saveBasket() {
+                    localStorage.setItem('basket', JSON.stringify(this.basket));
+                },
+                
+                loadBasket() {
+                    const saved = localStorage.getItem('basket');
+                    if (saved) {
+                        this.basket = JSON.parse(saved);
+                    }
+                },
+                
+                // Просмотр товара из корзины
+                showProductDetailsFromBasket(product) {
+                    this.hideBasket();
+                    this.showProductDetails(product);
+                },
+                
+                // Оформление заказа
+                showCheckoutForm() {
+                    if (this.basket.length === 0) {
+                        this.showToast('Корзина пуста', 'error');
+                        return;
+                    }
+                    
+                    document.getElementById('checkout-modal').classList.remove('hidden');
+                },
+                
+                hideCheckoutForm() {
+                    document.getElementById('checkout-modal').classList.add('hidden');
+                },
+                
+                async submitOrder() {
+                    // Проверка заполнения обязательных полей
+                    if (!this.orderForm.lastName || !this.orderForm.firstName || !this.orderForm.city || 
+                        !this.orderForm.street || !this.orderForm.house) {
+                        this.showToast('Заполните все обязательные поля', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        // Получаем данные пользователя Telegram
+                        const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+                        
+                        // Формируем данные заказа
+                        const orderData = {
+                            items: this.basket.map(item => ({
+                                product_id: item._id,
+                                product_name: item.product_name,
+                                price: item.price,
+                                quantity: item.quantity || 1,
+                                image_url: item.photo1 || null
+                            })),
+                            customer: {
+                                first_name: this.orderForm.firstName,
+                                last_name: this.orderForm.lastName,
+                                phone: this.orderForm.phone || '',
+                                email: this.orderForm.email || '',
+                                address: {
+                                    city: this.orderForm.city,
+                                    street: this.orderForm.street,
+                                    house: this.orderForm.house,
+                                    apartment: this.orderForm.apartment || ''
+                                }
+                            },
+                            delivery_method: this.orderForm.deliveryMethod,
+                            payment_method: this.orderForm.paymentMethod,
+                            comment: this.orderForm.comment || '',
+                            total: this.basketTotalPrice,
+                            // Добавляем данные пользователя Telegram
+                            telegram_user: tgUser ? {
+                                id: tgUser.id,
+                                username: tgUser.username,
+                                first_name: tgUser.first_name,
+                                last_name: tgUser.last_name
+                            } : null
+                        };
+                        
+                        // Отправляем заказ на сервер
+                        const response = await fetch('http://localhost:8000/api/orders', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Telegram-Init-Data': window.Telegram.WebApp.initData || ''
+                            },
+                            body: JSON.stringify(orderData)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(await response.text());
+                        }
+                        
+                        // Очищаем корзину
+                        this.basket = [];
+                        this.saveBasket();
+                        
+                        // Сбрасываем форму
+                        this.orderForm = {
+                            lastName: '',
+                            firstName: '',
+                            middleName: '',
+                            city: '',
+                            street: '',
+                            house: '',
+                            apartment: '',
+                            deliveryMethod: 'Самовывоз',
+                            paymentMethod: 'Карта',
+                            comment: ''
+                        };
+                        
+                        // Закрываем модальные окна
+                        this.hideCheckoutForm();
+                        this.hideBasket();
+                        
+                        this.showToast(`Заказ #${result.order_id} на сумму ${this.formatPrice(result.total)} ₽ оформлен!`, 'success');
+                        
+                    } catch (error) {
+                        console.error('Ошибка оформления заказа:', error);
+                    }
+                },
+                
+                // Модальные окна
+                showWishlist() {
+                    document.getElementById('wishlist-modal').classList.remove('hidden');
+                },
+                
+                hideWishlist() {
+                    document.getElementById('wishlist-modal').classList.add('hidden');
+                },
+                
+                // Просмотр товара из избранного
+                showProductDetailsFromWishlist(product) {
+                    this.hideWishlist();
+                    this.showProductDetails(product);
+                },
+                
+                showBasket() {
+                    document.getElementById('basket-modal').classList.remove('hidden');
+                },
+                
+                hideBasket() {
+                    document.getElementById('basket-modal').classList.add('hidden');
+                },
+                
+                showContacts() {
+                    document.getElementById('contacts-modal').classList.remove('hidden');
+                },
+                
+                hideContacts() {
+                    document.getElementById('contacts-modal').classList.add('hidden');
+                },
+                
+                sendMessage() {
+                    if (!this.contactMessage.trim()) {
+                        this.showToast('Введите сообщение', 'error');
+                        return;
+                    }
+                    
+                    this.showToast('Сообщение отправлено', 'success');
+                    this.contactMessage = '';
+                    this.hideContacts();
+                },
+                
+                showServiceInfo(service) {
+                    this.serviceInfoTitle = '';
+                    this.serviceInfoContent = '';
+                    
+                    switch (service) {
+                        case 'repair':
+                            this.serviceInfoTitle = 'Ремонт техники Apple';
+                            this.serviceInfoContent = `
+                                <p class="text-gray-300 mb-4">Мы предлагаем профессиональный ремонт всех устройств Apple:</p>
+                                <ul class="list-disc list-inside text-gray-300 mb-4">
+                                    <li>Замена экранов iPhone, iPad</li>
+                                    <li>Ремонт MacBook (замена клавиатур, матриц, корпусов)</li>
+                                    <li>Замена аккумуляторов с гарантией</li>
+                                    <li>Ремонт после воды</li>
+                                    <li>Апгрейд и обслуживание</li>
+                                </ul>
+                                <p class="text-gray-300">Все работы выполняются на оригинальных или качественных аналоговых комплектующих с гарантией до 1 года.</p>
+                            `;
+                            break;
+                        
+                        case 'delivery':
+                            this.serviceInfoTitle = 'Доставка';
+                            this.serviceInfoContent = `
+                                <p class="text-gray-300 mb-4">Мы предлагаем несколько вариантов доставки:</p>
+                                <ul class="list-disc list-inside text-gray-300 mb-4">
+                                    <li><strong>Самовывоз</strong> - из наших магазинов в Москве</li>
+                                    <li><strong>Курьерская доставка</strong> - по Москве в пределах МКАД (бесплатно при заказе от 10 000 ₽)</li>
+                                    <li><strong>Почта России</strong> - отправка в любой регион (сроки 5-14 дней)</li>
+                                    <li><strong>СДЭК</strong> - быстрая доставка по России (2-5 дней)</li>
+                                </ul>
+                                <p class="text-gray-300">Сроки доставки и стоимость уточняйте у менеджера при оформлении заказа.</p>
+                            `;
+                            break;
+                        
+                        case 'warranty':
+                            this.serviceInfoTitle = 'Гарантия качества';
+                            this.serviceInfoContent = `
+                                <p class="text-gray-300 mb-4">Мы гарантируем:</p>
+                                <ul class="list-disc list-inside text-gray-300 mb-4">
+                                    <li><strong>100% оригинальную продукцию</strong> - все товары проходят проверку на оригинальность</li>
+                                    <li><strong>Гарантию до 2 лет</strong> на технику Apple</li>
+                                    <li><strong>Гарантию до 1 года</strong> на ремонтные работы</li>
+                                    <li><strong>Возврат и обмен</strong> в течение 14 дней</li>
+                                </ul>
+                                <p class="text-gray-300">Все гарантийные обязательства оформляются официально.</p>
+                            `;
+                            break;
+                        case 'trade-in':
+                            this.serviceInfoTitle = 'Trade-in';
+                            this.serviceInfoContent = `
+                                <p class="text-gray-300 mb-4">Обменяйте ваше старое устройство на новое с доплатой:</p>
+                                <ul class="list-disc list-inside text-gray-300 mb-4">
+                                    <li>Оценка вашего устройства на месте</li>
+                                    <li>Честная рыночная стоимость</li>
+                                    <li>Быстрый обмен с минимальной доплатой</li>
+                                    <li>Гарантия на новое устройство</li>
+                                </ul>
+                                <p class="text-gray-300">Приносите ваши устройства для оценки в любой из наших магазинов.</p>
+                            `;
+                            break;
+                        case 'setup':
+                            this.serviceInfoTitle = 'Настройка устройств';
+                            this.serviceInfoContent = `
+                                <p class="text-gray-300 mb-4">Профессиональная настройка ваших устройств:</p>
+                                <ul class="list-disc list-inside text-gray-300 mb-4">
+                                    <li>Перенос данных со старого устройства</li>
+                                    <li>Настройка почты, календарей и контактов</li>
+                                    <li>Установка необходимых приложений</li>
+                                    <li>Настройка родительского контроля</li>
+                                    <li>Оптимизация работы устройства</li>
+                                </ul>
+                                <p class="text-gray-300">Сэкономьте свое время - доверьте настройку профессионалам.</p>
+                            `;
+                            break;
+                        case 'accessories':
+                            this.serviceInfoTitle = 'Аксессуары';
+                            this.serviceInfoContent = `
+                                <p class="text-gray-300 mb-4">Широкий выбор аксессуаров для ваших устройств:</p>
+                                <ul class="list-disc list-inside text-gray-300 mb-4">
+                                    <li>Оригинальные чехлы и защитные стекла</li>
+                                    <li>Наушники и гарнитуры</li>
+                                    <li>Зарядные устройства и кабели</li>
+                                    <li>Док-станции и адаптеры</li>
+                                    <li>Стилусы и другие аксессуары</li>
+                                </ul>
+                                <p class="text-gray-300">Все аксессуары проходят проверку на качество и совместимость.</p>
+                            `;
+                            break;
+                    }
+                    
+                    document.getElementById('service-info-modal').classList.remove('hidden');
+                },
+                
+                hideServiceInfo() {
+                    document.getElementById('service-info-modal').classList.add('hidden');
+                },
+                
+                // Просмотр деталей товара
+                showProductDetails(product) {
+                    this.currentProduct = {...product};
+                    this.currentSlide = 0;
+                    
+                    // Находим все варианты этого товара
+                    this.productVariants = this.products.filter(p => 
+                        p.category === product.category && 
+                        p.subcategory === product.subcategory
+                    );
+                    
+                    // Получаем уникальные цвета и объемы памяти
+                    this.availableColors = [...new Set(this.productVariants.map(p => p.color))];
+                    this.availableStorages = [...new Set(this.productVariants.map(p => p.storage))];
+                    
+                    document.getElementById('product-details-modal').classList.remove('hidden');
+                },
+                
+                hideProductDetails() {
+                    document.getElementById('product-details-modal').classList.add('hidden');
+                },
+                
+                // Переключение между вариантами товара
+                switchVariant(color, storage) {
+                    const variant = this.productVariants.find(p => 
+                        p.color === color && 
+                        p.storage === storage
+                    );
+                    
+                    if (variant) {
+                        this.currentProduct = {...variant};
+                        this.currentSlide = 0;
+                        this.$forceUpdate();
+                    }
+                },
+                
+                // Получение HEX-кода цвета по названию
+                getColorHex(colorName) {
+                    const colors = {
+                        'Blue': '#007AFF',
+                        'Midnight': '#1A1A1A',
+                        'Starlight': '#F5F5F7',
+                        'Black': '#000000',
+                        'Green': '#34C759',
+                        'Red': '#FF3B30',
+                        'Pink': '#FF2D55',
+                        'White': '#FFFFFF',
+                        'Grey': '#8E8E93'
+                    };
+                    
+                    return colors[colorName] || '#CCCCCC';
+                },
+                
+                // Методы для слайдера фотографий товара
+                nextPhoto() {
+                    if (this.currentSlide < this.photoCount - 1) {
+                        this.currentSlide++;
+                    } else {
+                        this.currentSlide = 0;
+                    }
+                },
+                
+                prevPhoto() {
+                    if (this.currentSlide > 0) {
+                        this.currentSlide--;
+                    } else {
+                        this.currentSlide = this.photoCount - 1;
+                    }
+                },
+                
+                goToPhoto(index) {
+                    if (index >= 0 && index < this.photoCount) {
+                        this.currentSlide = index;
+                    }
+                },
+                
+                // Поиск
+                toggleSearch() {
+                    this.showSearch = !this.showSearch;
+                    if (this.showSearch) {
+                        document.getElementById('search-input').focus();
+                    }
+                },
+                
+                // Прокрутка к секции
+                scrollTo(sectionId) {
+                    const element = document.getElementById(sectionId);
+                    if (element) {
+                        element.scrollIntoView({ 
+                            behavior: 'smooth' 
+                        });
+                    }
+                },
+                
+                // Всплывающие уведомления
+                showToast(message, type = 'success') {
+                    const toast = document.createElement('div');
+                    toast.className = `toast fixed bottom-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg flex items-center gap-2 z-50 ${
+                        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                    }`;
+                    toast.innerHTML = `
+                        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                        ${message}
+                    `;
+                    
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 3000);
+                },
+                
+                // Методы для слайдера новостей
+                nextSlide() {
+                    this.currentSlideIndex = (this.currentSlideIndex + 1) % this.news.length;
+                    this.scrollToCurrentSlide();
+                },
+                
+                prevSlide() {
+                    this.currentSlideIndex = (this.currentSlideIndex - 1 + this.news.length) % this.news.length;
+                    this.scrollToCurrentSlide();
+                },
+                
+                goToSlide(index) {
+                    this.currentSlideIndex = index;
+                    this.scrollToCurrentSlide();
+                },
+                
+                scrollToCurrentSlide() {
+                    const container = this.$refs.newsContainer;
+                    if (container) {
+                        // Прокручиваем к текущему слайду (учитываем дублирование)
+                        const slideWidth = container.children[0].offsetWidth;
+                        container.scrollTo({
+                            left: (this.currentSlideIndex + this.news.length) * slideWidth,
+                            behavior: 'smooth'
+                        });
+                    }
+                },
+                
+                handleScroll() {
+                    const container = this.$refs.newsContainer;
+                    if (container && !this.isDragging) {
+                        const slideWidth = container.children[0].offsetWidth;
+                        const scrollPosition = container.scrollLeft;
+                        
+                        // Определяем текущий слайд
+                        const slideIndex = Math.round(scrollPosition / slideWidth) % this.news.length;
+                        
+                        if (slideIndex !== this.currentSlideIndex) {
+                            this.currentSlideIndex = slideIndex;
+                            
+                            // Если достигли конца дублированных слайдов, плавно переходим к началу
+                            if (scrollPosition >= slideWidth * this.news.length * 1.5) {
+                                setTimeout(() => {
+                                    container.scrollTo({
+                                        left: slideWidth * this.news.length,
+                                        behavior: 'instant'
+                                    });
+                                }, 100);
+                            }
+                            
+                            // Если достигли начала дублированных слайдов, плавно переходим к концу
+                            if (scrollPosition <= slideWidth * (this.news.length - 1) * 0.5) {
+                                setTimeout(() => {
+                                    container.scrollTo({
+                                        left: slideWidth * (this.news.length * 2 - 1),
+                                        behavior: 'instant'
+                                    });
+                                }, 100);
+                            }
+                        }
+                    }
+                },
+                
+                // Методы для слайдера услуг
+                nextServiceSlide() {
+                    this.currentServiceIndex = (this.currentServiceIndex + 1) % this.services.length;
+                    this.scrollToCurrentServiceSlide();
+                },
+                
+                prevServiceSlide() {
+                    this.currentServiceIndex = (this.currentServiceIndex - 1 + this.services.length) % this.services.length;
+                    this.scrollToCurrentServiceSlide();
+                },
+                
+                goToServiceSlide(index) {
+                    this.currentServiceIndex = index;
+                    this.scrollToCurrentServiceSlide();
+                },
+                
+                scrollToCurrentServiceSlide() {
+                    const container = this.$refs.servicesContainer;
+                    if (container) {
+                        const slideWidth = container.children[0].offsetWidth;
+                        container.scrollTo({
+                            left: this.currentServiceIndex * slideWidth,
+                            behavior: 'smooth'
+                        });
+                    }
+                },
+                
+                handleServicesScroll() {
+                    const container = this.$refs.servicesContainer;
+                    if (container) {
+                        const slideWidth = container.children[0].offsetWidth;
+                        const scrollPosition = container.scrollLeft;
+                        const slideIndex = Math.round(scrollPosition / slideWidth);
+                        
+                        if (slideIndex !== this.currentServiceIndex) {
+                            this.currentServiceIndex = slideIndex;
+                        }
+                    }
+                },
+                
+                startAutoSlide() {
+                    this.stopAutoSlide();
+                    this.autoSlideInterval = setInterval(() => {
+                        this.nextSlide();
+                    }, 5000);
+                },
+                
+                stopAutoSlide() {
+                    if (this.autoSlideInterval) {
+                        clearInterval(this.autoSlideInterval);
+                        this.autoSlideInterval = null;
+                    }
+                },
+                
+                // Для touch-устройств
+                handleTouchStart(e) {
+                    this.isDragging = true;
+                    this.startPosX = e.touches[0].clientX;
+                    this.currentTranslateX = this.$refs.newsContainer.scrollLeft;
+                    this.stopAutoSlide();
+                },
+                
+                handleTouchMove(e) {
+                    if (!this.isDragging) return;
+                    const currentPosX = e.touches[0].clientX;
+                    const diffX = currentPosX - this.startPosX;
+                    this.$refs.newsContainer.scrollLeft = this.currentTranslateX - diffX;
+                },
+                
+                handleTouchEnd() {
+                    this.isDragging = false;
+                    this.startAutoSlide();
+                }
+            }
+        });
+
+        app.mount('#main-content');
+    </script>
+</body>
+</html>

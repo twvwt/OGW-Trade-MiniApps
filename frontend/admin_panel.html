@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGW Trade - Админ панель</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .order-card {
+            transition: all 0.3s ease;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .status-new {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+        .status-confirmed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-cancelled {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .status-completed {
+            background-color: #f0fdf4;
+            color: #065f46;
+        }
+        #drop-zone {
+            transition: all 0.2s ease;
+        }
+        #drop-zone.drag-over {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Заголовок и навигация -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">Админ панель OGW Trade</h1>
+            <div class="flex space-x-2 mt-4 md:mt-0">
+                <button id="orders-tab" class="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium">Заказы</button>
+                <button id="stats-tab" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Статистика</button>
+                <button id="upload-tab" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Загрузить прайс</button>
+            </div>
+        </div>
+
+        <!-- Фильтры для заказов -->
+        <div id="orders-section">
+            <div class="bg-white rounded-lg shadow p-4 mb-6">
+                <div class="flex flex-wrap gap-3">
+                    <select id="status-filter" class="px-3 py-2 border rounded-lg">
+                        <option value="all">Все статусы</option>
+                        <option value="Новый">Новый</option>
+                        <option value="Подтвержден">Подтвержден</option>
+                        <option value="Отменен">Отменен</option>
+                        <option value="Выполнен">Выполнен</option>
+                    </select>
+                    <input type="date" id="date-from" class="px-3 py-2 border rounded-lg">
+                    <input type="date" id="date-to" class="px-3 py-2 border rounded-lg">
+                    <button id="apply-filters" class="px-4 py-2 bg-blue-500 text-white rounded-lg">Применить</button>
+                    <button id="reset-filters" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">Сбросить</button>
+                    <div class="relative flex-grow">
+                        <input type="text" id="order-id-search" 
+                            class="w-full px-3 py-2 border rounded-lg pl-10" 
+                            placeholder="Поиск по номеру заказа">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button id="search-order-btn" class="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                        Найти
+                    </button>
+                </div>
+            </div>
+
+            <!-- Список заказов -->
+            <div id="orders-list" class="space-y-4">
+                <!-- Заказы будут загружаться здесь -->
+                <div class="text-center py-8 text-gray-500">Загрузка заказов...</div>
+            </div>
+        </div>
+
+        <!-- Статистика -->
+        <div id="stats-section" class="hidden">
+            <div class="bg-white rounded-lg shadow p-4 mb-6">
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <button data-period="day" class="px-3 py-1 bg-blue-500 text-white rounded-lg">День</button>
+                    <button data-period="week" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg">Неделя</button>
+                    <button data-period="month" class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg">Месяц</button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="font-medium mb-2">Продажи</h3>
+                        <canvas id="sales-chart" height="250"></canvas>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <h3 class="font-medium mb-2">Популярные товары</h3>
+                        <canvas id="products-chart" height="250"></canvas>
+                    </div>
+                </div>
+                
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <div class="text-2xl font-bold" id="total-sales">0 ₽</div>
+                        <div class="text-gray-500">Общая выручка</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <div class="text-2xl font-bold" id="total-orders">0</div>
+                        <div class="text-gray-500">Всего заказов</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow">
+                        <div class="text-2xl font-bold" id="avg-order">0 ₽</div>
+                        <div class="text-gray-500">Средний чек</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Загрузка прайса -->
+        <div id="upload-section" class="hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-bold mb-4">Загрузка прайс-листа</h2>
+                <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors">
+                    <form id="upload-form">
+                        <input type="file" id="price-file" accept=".xlsx" class="hidden">
+                        <label for="price-file" class="cursor-pointer">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                                <p class="mb-2 text-sm text-gray-500">
+                                    <span class="font-semibold">Нажмите для загрузки</span> или перетащите файл
+                                </p>
+                                <p class="text-xs text-gray-500">Только XLSX (Excel)</p>
+                            </div>
+                        </label>
+                        <div class="mt-4">
+                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50" id="upload-btn" disabled>
+                                Загрузить и обновить базу
+                            </button>
+                        </div>
+                    </form>
+                    <div id="upload-status" class="mt-4 hidden">
+                        <div class="flex items-center">
+                            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-2" id="upload-spinner"></div>
+                            <span id="upload-message">Загрузка и обработка файла...</span>
+                        </div>
+                        <pre id="upload-output" class="mt-2 p-2 bg-gray-100 rounded text-sm hidden overflow-auto max-h-40"></pre>
+                    </div>
+                </div>
+                <div class="mt-4 text-sm text-gray-500">
+                    <p class="font-medium">Инструкция:</p>
+                    <ol class="list-decimal list-inside mt-2 space-y-1">
+                        <li>Подготовьте Excel-файл с прайс-листом</li>
+                        <li>Каждый лист должен соответствовать категории товаров</li>
+                        <li>Загрузите файл, нажав на область выше</li>
+                        <li>После загрузки все существующие товары будут заменены</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для деталей заказа -->
+        <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="text-lg font-medium">Детали заказа</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4" id="order-details">
+                    <!-- Детали заказа будут загружаться здесь -->
+                </div>
+                <div class="p-4 border-t flex justify-end space-x-2">
+                    <select id="status-change" class="px-3 py-2 border rounded-lg">
+                        <option value="Новый">Новый</option>
+                        <option value="Подтвержден">Подтвержден</option>
+                        <option value="Отменен">Отменен</option>
+                        <option value="Выполнен">Выполнен</option>
+                    </select>
+                    <button id="save-status" class="px-4 py-2 bg-blue-500 text-white rounded-lg">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Глобальные переменные
+        let currentOrderId = null;
+        let salesChart = null;
+        let productsChart = null;
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Навигация
+            document.getElementById('orders-tab').addEventListener('click', () => {
+                document.getElementById('orders-section').classList.remove('hidden');
+                document.getElementById('stats-section').classList.add('hidden');
+                document.getElementById('upload-section').classList.add('hidden');
+                updateActiveTab('orders-tab');
+            });
+            
+            document.getElementById('stats-tab').addEventListener('click', () => {
+                document.getElementById('orders-section').classList.add('hidden');
+                document.getElementById('stats-section').classList.remove('hidden');
+                document.getElementById('upload-section').classList.add('hidden');
+                updateActiveTab('stats-tab');
+                loadStatistics('day');
+            });
+            
+            document.getElementById('upload-tab').addEventListener('click', () => {
+                document.getElementById('orders-section').classList.add('hidden');
+                document.getElementById('stats-section').classList.add('hidden');
+                document.getElementById('upload-section').classList.remove('hidden');
+                updateActiveTab('upload-tab');
+            });
+
+            // Фильтры заказов
+            document.getElementById('apply-filters').addEventListener('click', loadOrders);
+            document.getElementById('reset-filters').addEventListener('click', resetFilters);
+            
+            // Кнопки периода статистики
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const period = btn.dataset.period;
+                    loadStatistics(period);
+                    updateActivePeriodButton(period);
+                });
+            });
+            
+            // Модальное окно
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('order-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('save-status').addEventListener('click', updateOrderStatus);
+            
+            // Установим даты по умолчанию
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date-from').value = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            document.getElementById('date-to').value = today;
+            
+            // Загрузим заказы
+            await loadOrders();
+
+            // Обработчики для загрузки файла
+            setupFileUpload();
+        });
+        
+        function updateActiveTab(activeTabId) {
+            document.getElementById('orders-tab').classList.remove('bg-blue-500', 'text-white');
+            document.getElementById('orders-tab').classList.add('bg-gray-200', 'text-gray-700');
+            document.getElementById('stats-tab').classList.remove('bg-blue-500', 'text-white');
+            document.getElementById('stats-tab').classList.add('bg-gray-200', 'text-gray-700');
+            document.getElementById('upload-tab').classList.remove('bg-blue-500', 'text-white');
+            document.getElementById('upload-tab').classList.add('bg-gray-200', 'text-gray-700');
+            
+            document.getElementById(activeTabId).classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById(activeTabId).classList.add('bg-blue-500', 'text-white');
+        }
+        
+        function updateActivePeriodButton(period) {
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            document.querySelector(`[data-period="${period}"]`).classList.remove('bg-gray-200', 'text-gray-700');
+            document.querySelector(`[data-period="${period}"]`).classList.add('bg-blue-500', 'text-white');
+        }
+        
+        function resetFilters() {
+            document.getElementById('status-filter').value = 'all';
+            document.getElementById('date-from').value = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            document.getElementById('date-to').value = new Date().toISOString().split('T')[0];
+            loadOrders();
+        }
+        
+        async function loadOrders() {
+            const status = document.getElementById('status-filter').value;
+            const dateFrom = document.getElementById('date-from').value;
+            const dateTo = document.getElementById('date-to').value;
+            
+            try {
+                document.getElementById('orders-list').innerHTML = '<div class="text-center py-8 text-gray-500">Загрузка заказов...</div>';
+                
+                // Собираем параметры запроса
+                const params = new URLSearchParams();
+                if (status && status !== 'all') params.append('status', status);
+                if (dateFrom) params.append('date_from', dateFrom);
+                if (dateTo) params.append('date_to', dateTo);
+                
+                const response = await fetch(`http://localhost:8000/api/orders?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Telegram-Init-Data': window.Telegram.WebApp.initData || ''  // Для аутентификации
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Ошибка загрузки заказов');
+                }
+                
+                const orders = await response.json();
+                console.log("Получены заказы:", orders);  // Логируем для отладки
+                
+                if (orders.length === 0) {
+                    document.getElementById('orders-list').innerHTML = '<div class="text-center py-8 text-gray-500">Заказы не найдены</div>';
+                    return;
+                }
+                
+                // Отрисовка заказов...    
+                let html = '';
+                orders.forEach(order => {
+                    const orderDate = new Date(order.created_at).toLocaleString('ru-RU');
+                    const total = new Intl.NumberFormat('ru-RU').format(order.total);
+                    
+                    html += `
+                        <div class="order-card bg-white rounded-lg shadow overflow-hidden">
+                            <div class="p-4 border-b flex justify-between items-center">
+                                <div>
+                                    <div class="font-medium">Заказ #${order._id}</div>
+                                    <div class="text-sm text-gray-500">${orderDate}</div>
+                                </div>
+                                <span class="px-2 py-1 rounded-full text-sm ${getStatusClass(order.status)}">
+                                    ${order.status}
+                                </span>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Клиент:</span>
+                                    <span>${order.customer.first_name} ${order.customer.last_name}</span>
+                                </div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Телефон:</span>
+                                    <span>${order.customer.phone}</span>
+                                </div>
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-gray-600">Сумма:</span>
+                                    <span class="font-medium">${total} ₽</span>
+                                </div>
+                                <div class="mt-4 flex justify-end">
+                                    <button onclick="showOrderDetails('${order._id}')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm">
+                                        Подробнее
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('orders-list').innerHTML = html;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('orders-list').innerHTML = `
+                    <div class="text-center py-8 text-red-500">
+                        Ошибка загрузки заказов: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Новый': return 'status-new';
+                case 'Подтвержден': return 'status-confirmed';
+                case 'Отменен': return 'status-cancelled';
+                case 'Выполнен': return 'status-completed';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        async function showOrderDetails(orderId) {
+            currentOrderId = orderId;
+            
+            try {
+                document.getElementById('order-details').innerHTML = '<div class="text-center py-8 text-gray-500">Загрузка данных...</div>';
+                document.getElementById('order-modal').classList.remove('hidden');
+                
+                const response = await fetch(`http://localhost:8000/api/orders/${orderId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${tg.initData}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Ошибка загрузки данных заказа');
+                
+                const order = await response.json();
+                const orderDate = new Date(order.created_at).toLocaleString('ru-RU');
+                const total = new Intl.NumberFormat('ru-RU').format(order.total);
+                
+                let itemsHtml = '';
+                order.items.forEach(item => {
+                    const itemTotal = new Intl.NumberFormat('ru-RU').format(item.price * item.quantity);
+                    itemsHtml += `
+                        <div class="py-2 border-b">
+                            <div class="font-medium">${item.product_name}</div>
+                            <div class="flex justify-between text-sm text-gray-600">
+                                <span>${item.quantity} × ${item.price} ₽</span>
+                                <span>${itemTotal} ₽</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                let confirmedInfo = '';
+                if (order.status === 'Подтвержден' && order.confirmed_by) {
+                    const confirmedAt = new Date(order.confirmed_at).toLocaleString('ru-RU');
+                    confirmedInfo = `
+                        <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                            <div class="font-medium">Подтвержден администратором</div>
+                            <div class="text-sm text-gray-600">${confirmedAt}</div>
+                        </div>
+                    `;
+                }
+                
+                // Добавляем информацию о пользователе Telegram
+                let telegramInfo = '';
+                if (order.user_info && order.user_info.telegram_id) {
+                    telegramInfo = `
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="font-medium">Telegram клиента</div>
+                            <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                                <div class="text-gray-600">ID:</div>
+                                <div>${order.user_info.telegram_id}</div>
+                                <div class="text-gray-600">Username:</div>
+                                <div>${order.user_info.username || 'не указан'}</div>
+                                <div class="text-gray-600">Имя:</div>
+                                <div>${order.user_info.first_name || ''} ${order.user_info.last_name || ''}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                document.getElementById('order-details').innerHTML = `
+                    <div>
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="font-medium">Информация о заказе</div>
+                            <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                                <div class="text-gray-600">Номер заказа:</div>
+                                <div>${order._id}</div>
+                                <div class="text-gray-600">Дата:</div>
+                                <div>${orderDate}</div>
+                                <div class="text-gray-600">Статус:</div>
+                                <div>
+                                    <span class="px-2 py-1 rounded-full text-sm ${getStatusClass(order.status)}">
+                                        ${order.status}
+                                    </span>
+                                </div>
+                                <div class="text-gray-600">Сумма:</div>
+                                <div class="font-medium">${total} ₽</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="font-medium">Информация о клиенте</div>
+                            <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                                <div class="text-gray-600">Имя:</div>
+                                <div>${order.customer.first_name} ${order.customer.last_name}</div>
+                                <div class="text-gray-600">Телефон:</div>
+                                <div>${order.customer.phone}</div>
+                                <div class="text-gray-600">Email:</div>
+                                <div>${order.customer.email || 'не указан'}</div>
+                                <div class="text-gray-600">Адрес:</div>
+                                <div>
+                                    ${order.customer.address.city}, ${order.customer.address.street} ${order.customer.address.house}
+                                    ${order.customer.address.apartment ? ', кв. ' + order.customer.address.apartment : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="font-medium">Детали заказа</div>
+                            <div class="mt-2">
+                                <div class="font-medium">Способ доставки:</div>
+                                <div>${order.delivery_method}</div>
+                                <div class="mt-2 font-medium">Способ оплаты:</div>
+                                <div>${order.payment_method}</div>
+                                ${order.comment ? `
+                                    <div class="mt-2 font-medium">Комментарий:</div>
+                                    <div>${order.comment}</div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="font-medium">Товары</div>
+                            <div class="mt-2">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                        
+                        ${confirmedInfo}
+                    </div>
+                `;
+                
+                document.getElementById('status-change').value = order.status;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('order-details').innerHTML = `
+                    <div class="text-center py-8 text-red-500">
+                        Ошибка загрузки данных заказа: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        async function updateOrderStatus() {
+            const newStatus = document.getElementById('status-change').value;
+            
+            try {
+                const response = await fetch(`http://localhost:8000/api/orders/${currentOrderId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tg.initData}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) throw new Error('Ошибка обновления статуса');
+                
+                document.getElementById('order-modal').classList.add('hidden');
+                await loadOrders();
+                
+                // Покажем уведомление в Telegram
+                tg.showAlert(`Статус заказа #${currentOrderId} изменен на "${newStatus}"`);
+            } catch (error) {
+                console.error(error);
+                tg.showAlert(`Ошибка: ${error.message}`);
+            }
+        }
+        
+        async function loadStatistics(period) {
+            try {
+                const response = await fetch(`http://localhost:8000/api/statistics?period=${period}`, {
+                    headers: {
+                        'Authorization': `Bearer ${tg.initData}`
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Ошибка загрузки статистики');
+                
+                const stats = await response.json();
+                
+                // Обновим цифры
+                document.getElementById('total-sales').textContent = 
+                    new Intl.NumberFormat('ru-RU').format(stats.total_sales) + ' ₽';
+                document.getElementById('total-orders').textContent = stats.total_orders;
+                document.getElementById('avg-order').textContent = 
+                    new Intl.NumberFormat('ru-RU').format(stats.average_order) + ' ₽';
+                
+                // Обновим графики
+                updateSalesChart(stats.sales_chart);
+                updateProductsChart(stats.top_products);
+            } catch (error) {
+                console.error(error);
+                tg.showAlert(`Ошибка загрузки статистики: ${error.message}`);
+            }
+        }
+        
+        function updateSalesChart(data) {
+            const ctx = document.getElementById('sales-chart').getContext('2d');
+            
+            if (salesChart) {
+                salesChart.destroy();
+            }
+            
+            salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Продажи (₽)',
+                        data: data.values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateProductsChart(data) {
+            const ctx = document.getElementById('products-chart').getContext('2d');
+            
+            if (productsChart) {
+                productsChart.destroy();
+            }
+            
+            productsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Количество продаж',
+                        data: data.values,
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function setupFileUpload() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('price-file');
+            const uploadForm = document.getElementById('upload-form');
+            const uploadBtn = document.getElementById('upload-btn');
+            const uploadStatus = document.getElementById('upload-status');
+            const uploadMessage = document.getElementById('upload-message');
+            const uploadOutput = document.getElementById('upload-output');
+            const uploadSpinner = document.getElementById('upload-spinner');
+
+            // Обработка выбора файла через кнопку
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    uploadBtn.disabled = false;
+                    uploadMessage.textContent = `Выбран файл: ${file.name}`;
+                    uploadStatus.classList.remove('hidden');
+                    uploadOutput.classList.add('hidden');
+                }
+            });
+
+            // Обработка перетаскивания файла
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                dropZone.classList.add('drag-over');
+            }
+
+            function unhighlight() {
+                dropZone.classList.remove('drag-over');
+            }
+
+            // Обработка сброса файла
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                
+                if (file && file.name.endsWith('.xlsx')) {
+                    fileInput.files = dt.files;
+                    uploadBtn.disabled = false;
+                    uploadMessage.textContent = `Выбран файл: ${file.name}`;
+                    uploadStatus.classList.remove('hidden');
+                    uploadOutput.classList.add('hidden');
+                } else {
+                    tg.showAlert('Пожалуйста, загрузите файл в формате XLSX');
+                }
+            }
+
+            // Обработка отправки формы
+            uploadForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const file = fileInput.files[0];
+                if (!file) return;
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                uploadStatus.classList.remove('hidden');
+                uploadOutput.classList.add('hidden');
+                uploadMessage.textContent = 'Загрузка и обработка файла...';
+                uploadSpinner.classList.remove('hidden');
+                uploadBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('http://localhost:8000/admin/upload-price', {
+                        method: 'POST',
+                        headers: {
+                            'X-Telegram-Init-Data': window.Telegram.WebApp.initData || ''
+                        },
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (response.ok) {
+                        uploadMessage.textContent = 'Файл успешно загружен и данные обновлены';
+                        uploadOutput.textContent = result.message + '\n' + (result.output || 'Нет дополнительной информации');
+                        uploadOutput.classList.remove('hidden');
+                        tg.showAlert('Прайс-лист успешно обновлен!');
+                    } else {
+                        throw new Error(result.detail || 'Ошибка при загрузке файла');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    uploadMessage.textContent = 'Ошибка: ' + error.message;
+                    uploadOutput.textContent = error.stack || '';
+                    uploadOutput.classList.remove('hidden');
+                    tg.showAlert('Ошибка при загрузке файла: ' + error.message);
+                } finally {
+                    uploadSpinner.classList.add('hidden');
+                    fileInput.value = '';
+                    uploadBtn.disabled = true;
+                }
+            });
+        }
+
+        document.getElementById('search-order-btn').addEventListener('click', searchOrderById);
+        document.getElementById('order-id-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchOrderById();
+            }
+        });
+
+        async function searchOrderById() {
+            const orderId = document.getElementById('order-id-search').value.trim();
+            if (!orderId) {
+                tg.showAlert("Введите номер заказа для поиска");
+                return;
+            }
+
+            try {
+                document.getElementById('orders-list').innerHTML = '<div class="text-center py-8 text-gray-500">Поиск заказа...</div>';
+                
+                const response = await fetch(`http://localhost:8000/api/orders/${orderId}`, {
+                    headers: {
+                        'X-Telegram-Init-Data': window.Telegram.WebApp.initData || ''
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Заказ не найден');
+                }
+                
+                const order = await response.json();
+                
+                // Очищаем другие фильтры
+                document.getElementById('status-filter').value = 'all';
+                document.getElementById('date-from').value = '';
+                document.getElementById('date-to').value = '';
+                
+                // Отображаем найденный заказ
+                renderSingleOrder(order);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('orders-list').innerHTML = `
+                    <div class="text-center py-8 text-red-500">
+                        Ошибка поиска заказа: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function renderSingleOrder(order) {
+            const orderDate = new Date(order.created_at).toLocaleString('ru-RU');
+            const total = new Intl.NumberFormat('ru-RU').format(order.total);
+            
+            const html = `
+                <div class="order-card bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <div>
+                            <div class="font-medium">Заказ #${order._id}</div>
+                            <div class="text-sm text-gray-500">${orderDate}</div>
+                        </div>
+                        <span class="px-2 py-1 rounded-full text-sm ${getStatusClass(order.status)}">
+                            ${order.status}
+                        </span>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Клиент:</span>
+                            <span>${order.customer.first_name} ${order.customer.last_name}</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Телефон:</span>
+                            <span>${order.customer.phone}</span>
+                        </div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Сумма:</span>
+                            <span class="font-medium">${total} ₽</span>
+                        </div>
+                        <div class="mt-4 flex justify-end">
+                            <button onclick="showOrderDetails('${order._id}')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm">
+                                Подробнее
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <button onclick="loadOrders()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg">
+                        Показать все заказы
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('orders-list').innerHTML = html;
+        }
+
+        // Экспортируем функции для использования в HTML
+        window.showOrderDetails = showOrderDetails;
+    </script>
+</body>
+</html>
